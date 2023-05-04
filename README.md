@@ -5,6 +5,7 @@ Library to run tasks after some time
 ### Terms
 
 Task - endpoint starting business logic, similar to controller
+
 Request - task input
 
 ## Usage
@@ -213,3 +214,6 @@ class ScheduleCalculations : SuspendableTask<Request> {
     suspend fun execute(request: Request) {}
 }
 ```
+
+Notes:
+Uses internally java.util.Timer and java.util.TimerTask 
