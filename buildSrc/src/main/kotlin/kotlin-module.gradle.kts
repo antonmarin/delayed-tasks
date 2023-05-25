@@ -13,12 +13,16 @@ repositories {
 
 dependencies {
     // use jupiter engine https://junit.org/junit5/docs/current/user-guide/#running-tests-build-gradle-engines-configure
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:[5.9, 6.0)")
+    testImplementation("io.mockk:mockk:[1.13,2.0)")
+}
+
+kotlin {
+    jvmToolchain(11)
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
-        jvmTarget = "11"
         allWarningsAsErrors = true
     }
 }

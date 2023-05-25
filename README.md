@@ -10,15 +10,22 @@ Request - task input
 
 ## Usage
 
-- configure storage
+At first:
+- configure storage and registry
   ```kotlin
   val storage = PostgreSQLStorage()
   val tasksSchedule = TasksSchedule(storage)
+  val registry = TasksRegistry(TasksConfiguration(enabled = true))
   ```
 - create task `class ScheduleCalculations : Task<Request>`
+- Optional: implement task key resolver when expecting scheduling multiple tasks same time
+  ```kotlin
+  class ScheduleCalculationsKeyResolver : TaskKeyResolver(Request) { 
+      fun resolveKey(request: Request): String = request.getId().toString() 
+  }
+  ```
 - add task to registry 
   ```kotlin
-  val registry = TasksRegistry(TasksConfiguration(enabled = true))
   val scheduleCalculations = ScheduleCalculations()
   val taskConfig = TaskConfig(
       RetryConfig(
@@ -28,17 +35,14 @@ Request - task input
   )
   registry.add(scheduleCalculations, taskConfig)
   ```
-- implement task key resolver when expecting scheduling multiple tasks same time
-  ```kotlin
-  class ScheduleCalculationsKeyResolver : TaskKeyResolver(Request) { 
-      fun resolveKey(request: Request): String = request.getId().toString() 
-  }
-  ```
-- schedule task using api `tasksSchedule.schedule(...)`, periodically or manual(from cli or controlPlane) 
+- schedule task using api `tasksSchedule.schedule(...)`, periodically or manual(from cli or controlPlane)
+
 
 ### Components
 
-- api(ru.antonmarin:delayed-tasks:api): to schedule programmatically
+- platform to sync components version `implementation(platform("ru.antonmarin.delayed-tasks:platform:1.5.8"))`
+  when multiple required. [docs](https://docs.gradle.org/current/userguide/dependency_version_alignment.html#aligning_versions_natively_with_gradle)
+- api(ru.antonmarin.delayed-tasks:api): to schedule programmatically
 - periodic(ru.antonmarin.delayed-tasks:periodic): to run tasks periodically
 - control-plane(ru.antonmarin.delayed-tasks:control-plane): to observe registered tasks
 - spring(ru.antonmarin.delayed-tasks:spring): to integrate with spring
