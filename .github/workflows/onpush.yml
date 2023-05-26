@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup Gradle
+      - name: Test library
         uses: gradle/gradle-build-action@v2.4.2
         with:
           # Gradle version to use
