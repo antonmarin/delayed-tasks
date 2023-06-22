@@ -1,2 +1,2 @@
 rootProject.name = "delayed-tasks"
-include("core")
+include("api")

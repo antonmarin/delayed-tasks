@@ -10,22 +10,29 @@ Request - task input
 
 ## Usage
 
-At first:
+To schedule:
 - configure storage and registry
   ```kotlin
   val storage = PostgreSQLStorage()
   val tasksSchedule = TasksSchedule(storage)
-  val registry = TasksRegistry(TasksConfiguration(enabled = true))
   ```
-- create task `class ScheduleCalculations : Task<Request>`
 - Optional: implement task key resolver when expecting scheduling multiple tasks same time
   ```kotlin
-  class ScheduleCalculationsKeyResolver : TaskKeyResolver(Request) { 
+  class ScheduleCalculationsKeyResolver : KeyResolver<Request> { 
       fun resolveKey(request: Request): String = request.getId().toString() 
   }
+  tasksSchedule.registerKeyResolver(ScheduleCalculationsKeyResolver())
+  // or
+  val tasksSchedule = TasksSchedule(storage, mapOf(Request::class to ScheduleCalculationsKeyResolver()))
   ```
+- schedule task using api `tasksSchedule.schedule(ScheduleCalculations.Request())`,
+  periodically or manual(from cli or controlPlane)
+
+To execute:
+- create task class `class ScheduleCalculations : Task<ScheduleCalculations.Request>`
 - add task to registry 
   ```kotlin
+  val registry = TasksRegistry(TasksConfiguration(enabled = true))
   val scheduleCalculations = ScheduleCalculations()
   val taskConfig = TaskConfig(
       RetryConfig(
@@ -35,8 +42,6 @@ At first:
   )
   registry.add(scheduleCalculations, taskConfig)
   ```
-- schedule task using api `tasksSchedule.schedule(...)`, periodically or manual(from cli or controlPlane)
-
 
 ### Components
 
