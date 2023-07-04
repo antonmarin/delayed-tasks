@@ -12,6 +12,9 @@ repositories {
 }
 
 dependencies {
+    // logger
+    api("org.slf4j:slf4j-api:[1.7,2.0)!!1.7.9")
+
     // use jupiter engine https://junit.org/junit5/docs/current/user-guide/#running-tests-build-gradle-engines-configure
     testImplementation("org.junit.jupiter:junit-jupiter:[5.9, 6.0)!!5.9.3")
     testImplementation("io.mockk:mockk:[1.13,2.0)")

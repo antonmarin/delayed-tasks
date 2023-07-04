@@ -1,47 +1,36 @@
 # Delayed tasks
 
-Library to run tasks after some time
+Library to run tasks(or jobs if you prefer)
 
 ### Terms
 
-Task - endpoint starting business logic, similar to controller
-
-Request - task input
+* Task - endpoint starting business logic, similar to controller
+* Request - task input
+* Schedule - strategy of scheduling requested tasks (Instance/Distributed)
 
 ## Usage
 
-To schedule:
-- configure storage and registry
-  ```kotlin
-  val storage = PostgreSQLStorage()
-  val tasksSchedule = TasksSchedule(storage)
-  ```
-- Optional: implement task key resolver when expecting scheduling multiple tasks same time
-  ```kotlin
-  class ScheduleCalculationsKeyResolver : KeyResolver<Request> { 
-      fun resolveKey(request: Request): String = request.getId().toString() 
-  }
-  tasksSchedule.registerKeyResolver(ScheduleCalculationsKeyResolver())
-  // or
-  val tasksSchedule = TasksSchedule(storage, mapOf(Request::class to ScheduleCalculationsKeyResolver()))
-  ```
-- schedule task using api `tasksSchedule.schedule(ScheduleCalculations.Request())`,
-  periodically or manual(from cli or controlPlane)
+The simplest case:
 
-To execute:
-- create task class `class ScheduleCalculations : Task<ScheduleCalculations.Request>`
-- add task to registry 
-  ```kotlin
-  val registry = TasksRegistry(TasksConfiguration(enabled = true))
-  val scheduleCalculations = ScheduleCalculations()
-  val taskConfig = TaskConfig(
-      RetryConfig(
-          maxRetriesCount = 10,
-          delayOnFailStrategy = Fixed(Duration.parse("PT1M")),
-      ),
-  )
-  registry.add(scheduleCalculations, taskConfig)
-  ```
+```kotlin
+// create task class
+class ScheduleCalculations : Task<ScheduleCalculations.Request> {
+  override fun execute(request: Request) {/* some code here*/}
+  class Request : HashCodeIdempotent() // or implement TaskRequest to support own request idempotency key
+}
+// select task executing request  
+val tasksRegistry = TasksRegistry(mapOf(ScheduleCalculations.Request::class to ScheduleCalculations()))
+// select schedule. Instance or Distributed
+val tasksSchedule = InstanceSchedule(tasksRegistry = tasksRegistry)
+// run at once task execution with request using api
+tasksSchedule.run(ScheduleCalculations.Request()) // also runAt() and runAfter() available
+
+// Optional: to change idempotency key when expecting scheduling multiple tasks same time
+// implement TaskRequest interface instead extending HashCodeIdempotent 
+class Request(val id: UUID) : TaskRequest {
+  fun getIdempotencyKey(): String = id.toString()
+}
+```
 
 ### Components
 
@@ -140,10 +129,10 @@ taskSchedule.findAll(Request::class)
 - registered tasks
 - ability to execute task manually
 
-### Configuration
+### File Configuration
 
 ```kotlin
-class TasksConfiguration (
+class FileConfiguration (
     val enabled: Boolean, // enables delayed tasks mechanism
 )
 class TasksSchedule(
